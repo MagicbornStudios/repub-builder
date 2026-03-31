@@ -135,6 +135,8 @@ export function ReaderWorkspaceSidebar({
   expanded,
   onToggleExpanded,
   extraLinks = [],
+  /** When false, the collapse control is omitted from the rail header (host can place it in the main toolbar). */
+  showHeaderCollapse = false,
 }: {
   readerAppPath: string;
   isLibraryView: boolean;
@@ -143,6 +145,7 @@ export function ReaderWorkspaceSidebar({
   expanded: boolean;
   onToggleExpanded: () => void;
   extraLinks?: ReaderShellNavLink[];
+  showHeaderCollapse?: boolean;
 }) {
   const shellClass = `${t.readerNavPanel} flex flex-col border-r`;
 
@@ -158,7 +161,7 @@ export function ReaderWorkspaceSidebar({
         activeTitle={activeTitle}
         ReaderLink={ReaderLink}
         extraLinks={extraLinks}
-        showDesktopCollapse
+        showDesktopCollapse={showHeaderCollapse}
         expanded={expanded}
         onToggleExpanded={onToggleExpanded}
       />
