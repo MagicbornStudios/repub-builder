@@ -1,0 +1,76 @@
+{
+  "name": "@portfolio/repub-builder",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Build RichEPub (.repub) from a repub project (Vite + React + Tailwind)",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./reader": {
+      "types": "./dist/reader/index.d.ts",
+      "import": "./dist/reader/index.js",
+      "default": "./dist/reader/index.js"
+    }
+  },
+  "bin": {
+    "repub-build": "./dist/cli.js",
+    "repub": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MagicbornStudios/repub-builder.git"
+  },
+  "license": "MIT",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "keywords": [
+    "repub",
+    "richepub",
+    "epub",
+    "ebook",
+    "vite",
+    "react"
+  ],
+  "scripts": {
+    "build": "tsup --config tsup.config.ts && node scripts/postbuild.mjs",
+    "dev": "tsup --config tsup.config.ts --watch",
+    "prepare": "npm run build",
+    "repub": "node dist/cli.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@mdx-js/mdx": "^3.0.0",
+    "archiver": "^7.0.1",
+    "epub-gen": "^0.1.0",
+    "framer-motion": "^12.23.26",
+    "gray-matter": "^4.0.3",
+    "jszip": "^3.10.1",
+    "lucide-react": "^0.559.0",
+    "marked": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-reader": "^2.0.15",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@types/archiver": "^7.0.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.0.0",
+    "vitest": "^3.0.5"
+  }
+}

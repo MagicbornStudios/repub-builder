@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Repub Reader</title>
+  <style>
+    body { margin: 0; font-family: system-ui; background: #1e1e1e; color: #e5e5e5; }
+    #toolbar { padding: 8px 12px; background: #2d2d2d; }
+    #frame { width: 100%; height: calc(100vh - 40px); border: none; background: #fff; }
+    #status { padding: 20px; }
+    .error { color: #f87171; }
+  </style>
+</head>
+<body>
+  <div id="toolbar">Repub Reader</div>
+  <div id="status">Loading…</div>
+  <iframe id="frame" style="display:none" sandbox="allow-scripts"></iframe>
+  <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script>
+    (function() {
+      function escapeRe(s) {
+        return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }
+      var status = document.getElementById('status');
+      var frame = document.getElementById('frame');
+      fetch('/book.repub')
+        .then(function(r) {
+          if (!r.ok) throw new Error('Failed to load: ' + r.status);
+          return r.arrayBuffer();
+        })
+        .then(function(buf) {
+          return JSZip.loadAsync(buf);
+        })
+        .then(function(zip) {
+          var manifest = zip.file('repub.json');
+          var entry = zip.file('content/index.html');
+          if (!manifest || !entry) throw new Error('Invalid .repub');
+          return entry.async('string').then(function(html) {
+            var blobUrls = {};
+            var names = Object.keys(zip.files).filter(function(n) { return !zip.files[n].dir; });
+            return Promise.all(names.map(function(name) {
+              var f = zip.file(name);
+              if (!f) return Promise.resolve();
+              return f.async('blob').then(function(blob) {
+                blobUrls[name] = URL.createObjectURL(blob);
+              });
+            })).then(function() {
+              for (var p in blobUrls) {
+                if (p.indexOf('assets/') !== 0) continue;
+                var base = p.replace('assets/', '');
+                var url = blobUrls[p];
+                var re1 = new RegExp('(["\'])\.\./assets/' + escapeRe(base) + '(["\'])', 'g');
+                var re2 = new RegExp('(["\'])\./assets/' + escapeRe(base) + '(["\'])', 'g');
+                var re3 = new RegExp('(["\'])/assets/' + escapeRe(base) + '(["\'])', 'g');
+                html = html.replace(re1, '$1' + url + '$2').replace(re2, '$1' + url + '$2').replace(re3, '$1' + url + '$2');
+              }
+              var blob = new Blob([html], { type: 'text/html' });
+              return URL.createObjectURL(blob);
+            });
+          });
+        })
+        .then(function(entryUrl) {
+          status.style.display = 'none';
+          frame.style.display = 'block';
+          frame.src = entryUrl;
+        })
+        .catch(function(e) {
+          status.className = 'error';
+          status.textContent = e.message || 'Failed to load .repub';
+        });
+    })();
+  </script>
+</body>
+</html>
