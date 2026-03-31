@@ -96,9 +96,10 @@ export function resolveReaderWorkspaceState(
 
   if (initialBook?.hasEpub) {
     const sourceKind = initialBook.sourceKind === 'uploaded' ? 'uploaded' : 'built-in';
+    const remoteEpubUrl = initialBook.remoteEpubUrl?.trim();
     const epubUrl =
-      sourceKind === 'uploaded' && initialBook.remoteEpubUrl
-        ? initialBook.remoteEpubUrl
+      remoteEpubUrl && remoteEpubUrl.length > 0
+        ? remoteEpubUrl
         : builtInEpubHref(initialBook.slug);
 
     return {
