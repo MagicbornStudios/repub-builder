@@ -29,11 +29,12 @@ export function ReaderModalRoot({
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-6">
-      <button
+      <Button
         type="button"
         aria-label="Close"
-        className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+        variant="ghost"
         onClick={close}
+        className="absolute inset-0 z-0 h-full min-h-full w-full rounded-none border-0 bg-black/75 p-0 backdrop-blur-sm hover:bg-black/75 focus-visible:ring-0"
       />
       <div
         role="dialog"
