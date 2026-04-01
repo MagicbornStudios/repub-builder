@@ -521,6 +521,8 @@ export default function EpubViewer({
   persistenceAdapter = null,
   preferPagedReader = true,
 }: EpubViewerProps) {
+  const readerMinHeightClass =
+    layoutMode === 'reader' ? 'min-h-[clamp(520px,78vh,980px)]' : 'min-h-[400px]';
   const [location, setLocation] = useState<string | number>(0);
   const [epubBuffer, setEpubBuffer] = useState<ArrayBuffer | null>(null);
   const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
@@ -1022,7 +1024,7 @@ export default function EpubViewer({
   return (
     <div
       ref={readerRootRef}
-      className={`epub-reader-root relative flex h-full min-h-[400px] flex-col overflow-hidden ${className}`}
+      className={`epub-reader-root relative flex h-full ${readerMinHeightClass} flex-col overflow-hidden ${className}`}
     >
       <input
         ref={importInputRef}
@@ -1037,7 +1039,7 @@ export default function EpubViewer({
       />
       {title && (
         <header
-          className="epub-reader-header flex items-center gap-3 shrink-0 px-4 border-b border-border bg-dark-alt"
+          className="epub-reader-header relative z-20 flex shrink-0 items-center gap-3 border-b border-border bg-card/95 px-4 shadow-[0_1px_0_rgba(0,0,0,0.06)] backdrop-blur-sm backdrop-saturate-150 dark:shadow-[0_1px_0_rgba(255,255,255,0.06)]"
           style={{ height: READER_HEADER_H }}
         >
           <BookOpen
@@ -1052,7 +1054,7 @@ export default function EpubViewer({
       <div className="epub-reader-content flex-1 min-h-0 relative">
         {layoutMode === 'reader' ? (
           <>
-            <div className="pointer-events-none absolute left-4 top-4 z-30">
+            <div className="pointer-events-none absolute left-4 top-4 z-50">
               <Button
                 type="button"
                 onClick={() => {
@@ -1070,7 +1072,7 @@ export default function EpubViewer({
             <AnimatePresence initial={false}>
               {isTocOpen ? (
                 <motion.div
-                  className="pointer-events-none absolute inset-0 z-20"
+                  className="pointer-events-none absolute inset-0 z-40"
                   initial={{ opacity: 1 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 1 }}
@@ -1114,7 +1116,7 @@ export default function EpubViewer({
             </AnimatePresence>
             {annotationsEnabled && storageKey ? (
               <>
-                <div className="pointer-events-none absolute right-4 top-4 z-30">
+                <div className="pointer-events-none absolute right-4 top-4 z-50">
                   <Button
                     type="button"
                     onClick={() => {
@@ -1132,7 +1134,7 @@ export default function EpubViewer({
                 <AnimatePresence initial={false}>
                   {isNotesOpen ? (
                     <motion.div
-                      className="pointer-events-none absolute inset-0 z-20"
+                      className="pointer-events-none absolute inset-0 z-40"
                       initial={{ opacity: 1 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 1 }}
@@ -1303,8 +1305,8 @@ export default function EpubViewer({
         </div>
       ) : null}
       {layoutMode === 'reader' && readyBuffer && !isLoadingBook && !visibleError ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-2 z-20 flex justify-center px-4">
-          <div className="pointer-events-auto flex w-full max-w-[102rem] items-center justify-between gap-3 rounded-full border border-[rgba(140,102,67,0.14)] bg-[rgba(12,9,7,0.78)] px-3 py-1.5 text-[0.76rem] text-[rgba(236,223,204,0.78)] shadow-[0_14px_34px_rgba(0,0,0,0.24)] backdrop-blur-md md:px-4">
+        <div className="pointer-events-none absolute inset-x-0 bottom-2 z-50 flex justify-center px-4">
+          <div className="pointer-events-auto flex w-full max-w-[102rem] items-center justify-between gap-3 rounded-full border border-[rgba(140,102,67,0.22)] bg-[rgba(14,10,8,0.96)] px-3 py-1.5 text-[0.76rem] text-[rgba(236,223,204,0.86)] shadow-[0_14px_34px_rgba(0,0,0,0.3)] md:px-4">
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium tracking-[0.03em] text-[rgba(247,239,229,0.82)]">
                 {footerLabel}
