@@ -46,7 +46,7 @@
   "scripts": {
     "build": "tsup --config tsup.config.ts && node scripts/postbuild.mjs",
     "dev": "tsup --config tsup.config.ts --watch",
-    "prepare": "npm run build",
+    "prepare": "node scripts/prepare-notice.mjs && npm run build",
     "repub": "node dist/cli.js",
     "test": "vitest run"
   },
