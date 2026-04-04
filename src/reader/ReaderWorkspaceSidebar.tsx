@@ -23,6 +23,7 @@ function SidebarNavSections({
   showDesktopCollapse,
   expanded,
   onToggleExpanded,
+  onNavigate,
 }: {
   showLabels: boolean;
   readerAppPath: string;
@@ -33,6 +34,8 @@ function SidebarNavSections({
   showDesktopCollapse: boolean;
   expanded: boolean;
   onToggleExpanded: () => void;
+  /** Close mobile drawer after in-app navigation */
+  onNavigate?: () => void;
 }) {
   const Link = ReaderLink;
   const libraryHref = readerAppHref(readerAppPath);
@@ -43,7 +46,7 @@ function SidebarNavSections({
     <>
       <div className={`flex items-center justify-between gap-2 border-b px-2 py-3 md:px-3 ${t.readerNavHeader}`}>
         {showLabels ? (
-          <Link href={libraryHref} className={brandLinkClass}>
+          <Link href={libraryHref} className={brandLinkClass} onClick={onNavigate}>
             <p className={`text-[0.65rem] font-semibold uppercase tracking-[0.2em] ${t.readerNavKicker}`}>Reader</p>
             <p className={`mt-0.5 truncate font-display text-sm ${t.readerNavTitle}`}>Workspace</p>
           </Link>
@@ -53,6 +56,7 @@ function SidebarNavSections({
             className={`flex min-w-0 flex-1 items-center justify-center rounded-lg p-2 ${t.readerNavIconButton}`}
             aria-label="Reader library"
             title="Library"
+            onClick={onNavigate}
           >
             <LibraryBig size={20} className="shrink-0 opacity-90" aria-hidden />
           </Link>
@@ -75,6 +79,7 @@ function SidebarNavSections({
         <Link
           href={libraryHref}
           className={`flex items-center gap-2.5 rounded-xl py-2.5 text-sm font-medium transition-colors ${rowPad} ${navItemClass(isLibraryView)}`}
+          onClick={onNavigate}
         >
           <LibraryBig size={18} className="shrink-0 opacity-90" aria-hidden />
           {showLabels ? <span>Library</span> : <span className="sr-only">Library</span>}
@@ -109,6 +114,7 @@ function SidebarNavSections({
             key={item.href}
             href={item.href}
             className={`flex items-center gap-2.5 rounded-xl py-2 text-sm transition-colors ${rowPad} ${navItemClass(false)}`}
+            onClick={onNavigate}
           >
             {item.href === '/' ? (
               <Home size={17} className="shrink-0 opacity-90" aria-hidden />
@@ -137,6 +143,8 @@ export function ReaderWorkspaceSidebar({
   extraLinks = [],
   /** When false, the collapse control is omitted from the rail header (host can place it in the main toolbar). */
   showHeaderCollapse = false,
+  mobileNavOpen = false,
+  onCloseMobileNav,
 }: {
   readerAppPath: string;
   isLibraryView: boolean;
@@ -146,25 +154,52 @@ export function ReaderWorkspaceSidebar({
   onToggleExpanded: () => void;
   extraLinks?: ReaderShellNavLink[];
   showHeaderCollapse?: boolean;
+  /** Slide-over nav for viewports below `md` (primary rail stays `md+` only). */
+  mobileNavOpen?: boolean;
+  onCloseMobileNav?: () => void;
 }) {
   const shellClass = `${t.readerNavPanel} flex flex-col border-r`;
+  const navProps = {
+    showLabels: expanded,
+    readerAppPath,
+    isLibraryView,
+    activeTitle,
+    ReaderLink,
+    extraLinks,
+    showDesktopCollapse: showHeaderCollapse,
+    expanded,
+    onToggleExpanded,
+    onNavigate: onCloseMobileNav,
+  };
 
   return (
-    <aside
-      className={`hidden min-h-0 shrink-0 transition-[width] duration-200 ease-out md:flex md:flex-col ${expanded ? 'w-[15.5rem]' : 'w-[4.25rem]'} ${shellClass}`}
-      aria-label="Reader workspace navigation"
-    >
-      <SidebarNavSections
-        showLabels={expanded}
-        readerAppPath={readerAppPath}
-        isLibraryView={isLibraryView}
-        activeTitle={activeTitle}
-        ReaderLink={ReaderLink}
-        extraLinks={extraLinks}
-        showDesktopCollapse={showHeaderCollapse}
-        expanded={expanded}
-        onToggleExpanded={onToggleExpanded}
-      />
-    </aside>
+    <>
+      {onCloseMobileNav ? (
+        <>
+          <div
+            className={`fixed inset-0 z-30 bg-black/50 transition-opacity md:hidden ${
+              mobileNavOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+            }`}
+            onClick={onCloseMobileNav}
+            aria-hidden
+          />
+          <aside
+            className={`fixed left-0 top-0 z-40 flex h-full min-h-0 flex-col border-r transition-transform duration-200 ease-out md:hidden ${
+              expanded ? 'w-[15.5rem]' : 'w-[4.25rem]'
+            } ${mobileNavOpen ? 'translate-x-0' : '-translate-x-full'} ${shellClass}`}
+            aria-label="Reader workspace navigation"
+            aria-hidden={!mobileNavOpen}
+          >
+            <SidebarNavSections {...navProps} />
+          </aside>
+        </>
+      ) : null}
+      <aside
+        className={`hidden min-h-0 shrink-0 transition-[width] duration-200 ease-out md:flex md:flex-col ${expanded ? 'w-[15.5rem]' : 'w-[4.25rem]'} ${shellClass}`}
+        aria-label="Reader workspace navigation"
+      >
+        <SidebarNavSections {...navProps} />
+      </aside>
+    </>
   );
 }

@@ -177,6 +177,7 @@ export default function ReaderWorkspace({
   } | null>(null);
   const [readerNavExpanded, setReaderNavExpanded] = useState(true);
   const [readerNavHydrated, setReaderNavHydrated] = useState(false);
+  const [mobileReaderNavOpen, setMobileReaderNavOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsDraft, setSettingsDraft] = useState<ReaderWorkspaceSettingsState>(
     workspaceSettings ?? DEFAULT_WORKSPACE_SETTINGS,
@@ -218,6 +219,16 @@ export default function ReaderWorkspace({
       /* ignore */
     }
   }, [readerNavExpanded, readerNavHydrated]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (!mobileReaderNavOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileReaderNavOpen]);
 
   useEffect(() => {
     setSettingsDraft(workspaceSettings ?? DEFAULT_WORKSPACE_SETTINGS);
@@ -519,14 +530,27 @@ export default function ReaderWorkspace({
           onToggleExpanded={() => setReaderNavExpanded((v) => !v)}
           extraLinks={readerShellNavLinks}
           showHeaderCollapse={false}
+          mobileNavOpen={mobileReaderNavOpen}
+          onCloseMobileNav={() => setMobileReaderNavOpen(false)}
         />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <div className={`shrink-0 border-b ${t.headerBar}`}>
             <div className="mx-auto flex max-w-[120rem] flex-wrap items-end justify-between gap-x-3 gap-y-2 px-4 pb-0 pt-2.5 md:px-5">
               <div className="flex min-w-0 flex-1 flex-wrap items-end gap-x-3 gap-y-2">
                 <div className="flex min-w-0 items-center gap-2.5 pb-2">
+                  <Button
+                    type="button"
+                    onClick={() => setMobileReaderNavOpen(true)}
+                    variant="outline"
+                    size="sm"
+                    className={`md:hidden shrink-0 rounded-full ${t.pillButton}`}
+                    aria-label="Open reader navigation"
+                    title="Reader navigation"
+                  >
+                    <PanelLeft size={15} aria-hidden />
+                  </Button>
                   {readerToolbarStart ? (
-                    <span className="flex shrink-0 items-center self-center pb-0.5">{readerToolbarStart}</span>
+                    <span className="flex shrink-0 items-center pb-0.5">{readerToolbarStart}</span>
                   ) : null}
                   {!isLibraryView ? (
                     <Link
