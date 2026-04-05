@@ -1,16 +1,38 @@
 'use client';
 
 import React from 'react';
-import { BookOpen, Home, LayoutGrid, LibraryBig, PanelLeftClose, PanelLeft, ScrollText } from 'lucide-react';
+import {
+  BookOpen,
+  Compass,
+  FileText,
+  Headphones,
+  Home,
+  LayoutGrid,
+  LibraryBig,
+  PanelLeftClose,
+  PanelLeft,
+  ScrollText,
+} from 'lucide-react';
 import type { ReaderLinkComponent } from './types';
 import { readerChromeClasses as t } from './reader-chrome-theme';
 import { readerAppHref } from './reader-routes';
-import { Button } from './ui/button';
 
 export type ReaderShellNavLink = { href: string; label: string };
 
 function navItemClass(active: boolean): string {
   return active ? t.readerNavItemActive : t.readerNavItem;
+}
+
+function ShellLinkIcon({ href }: { href: string }) {
+  const common = 'shrink-0 opacity-90';
+  if (href === '/') return <Home size={17} className={common} aria-hidden />;
+  if (href.startsWith('/docs')) return <ScrollText size={17} className={common} aria-hidden />;
+  if (href.startsWith('/resumes')) return <FileText size={17} className={common} aria-hidden />;
+  if (href.startsWith('/projects')) return <Compass size={17} className={common} aria-hidden />;
+  if (href.startsWith('/listen')) return <Headphones size={17} className={common} aria-hidden />;
+  if (href.startsWith('/apps/reader')) return <LibraryBig size={17} className={common} aria-hidden />;
+  if (href.startsWith('/apps')) return <LayoutGrid size={17} className={common} aria-hidden />;
+  return <span className="h-[17px] w-[17px] shrink-0" aria-hidden />;
 }
 
 function SidebarNavSections({
@@ -62,16 +84,15 @@ function SidebarNavSections({
           </Link>
         )}
         {showDesktopCollapse ? (
-          <Button
+          <button
+            type="button"
             onClick={onToggleExpanded}
-            variant="outline"
-            size="icon-sm"
-            className={`shrink-0 ${t.readerNavIconButton}`}
+            className={`inline-flex size-8 shrink-0 items-center justify-center rounded-md border ${t.readerNavIconButton}`}
             aria-label={expanded ? 'Collapse reader sidebar' : 'Expand reader sidebar'}
             title={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
           >
             {expanded ? <PanelLeftClose size={18} aria-hidden /> : <PanelLeft size={18} aria-hidden />}
-          </Button>
+          </button>
         ) : null}
       </div>
 
@@ -116,15 +137,7 @@ function SidebarNavSections({
             className={`flex items-center gap-2.5 rounded-xl py-2 text-sm transition-colors ${rowPad} ${navItemClass(false)}`}
             onClick={onNavigate}
           >
-            {item.href === '/' ? (
-              <Home size={17} className="shrink-0 opacity-90" aria-hidden />
-            ) : item.href.startsWith('/docs') ? (
-              <ScrollText size={17} className="shrink-0 opacity-90" aria-hidden />
-            ) : item.href.startsWith('/apps') ? (
-              <LayoutGrid size={17} className="shrink-0 opacity-90" aria-hidden />
-            ) : (
-              <span className="w-[17px] shrink-0" />
-            )}
+            <ShellLinkIcon href={item.href} />
             {showLabels ? <span>{item.label}</span> : <span className="sr-only">{item.label}</span>}
           </Link>
         ))}
