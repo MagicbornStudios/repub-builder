@@ -11,15 +11,24 @@ export { default as EpubViewer } from './EpubViewer';
 export { default as EpubViewerLazy } from './EpubViewerLazy';
 export type { EpubViewerProps } from './EpubViewer';
 export { useReaderModalStore } from './reader-modal-store';
+export { useReaderWorkspaceUiStore } from './reader-workspace-ui-store';
 export {
   EPUB_LOCATION_STORAGE_PREFIX,
   EPUB_PROGRESS_STORAGE_PREFIX,
   formatReaderProgressLabel,
   readStoredReaderProgress,
+  readStoredReaderLocation,
+  persistStoredReaderLocation,
+  hasStoredReaderLocation,
   resolveReaderShelfStatus,
   persistStoredReaderProgress,
   type ReaderShelfStatus,
 } from './reader-progress';
+export {
+  READER_READING_STORE_NAME,
+  useReaderReadingStore,
+  type ReaderReadingPersisted,
+} from './reader-reading-store';
 export { readerAppHref } from './reader-routes';
 export {
   mergePersistedAnnotations,

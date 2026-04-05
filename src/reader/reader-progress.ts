@@ -1,5 +1,9 @@
-export const EPUB_LOCATION_STORAGE_PREFIX = 'epub-location-';
-export const EPUB_PROGRESS_STORAGE_PREFIX = 'epub-progress-';
+import { useReaderReadingStore } from './reader-reading-store';
+
+export {
+  EPUB_LOCATION_STORAGE_PREFIX,
+  EPUB_PROGRESS_STORAGE_PREFIX,
+} from './reader-storage-keys';
 
 export type ReaderShelfStatus =
   | { kind: 'new'; label: 'New'; progress: 0 }
@@ -44,25 +48,25 @@ export function resolveReaderShelfStatus(hasEpub: boolean, progress: number | nu
 
 export function readStoredReaderProgress(storageKey: string): number | null {
   if (typeof window === 'undefined') return null;
-
-  try {
-    const raw = window.localStorage.getItem(EPUB_PROGRESS_STORAGE_PREFIX + storageKey);
-    if (!raw) return null;
-
-    const parsed = Number.parseFloat(raw);
-    if (!Number.isFinite(parsed)) return null;
-    return clampProgress(parsed);
-  } catch {
-    return null;
-  }
+  return useReaderReadingStore.getState().getProgress(storageKey);
 }
 
 export function persistStoredReaderProgress(storageKey: string, progress: number | null) {
-  if (typeof window === 'undefined' || progress == null) return;
+  if (typeof window === 'undefined') return;
+  useReaderReadingStore.getState().setProgress(storageKey, progress);
+}
 
-  try {
-    window.localStorage.setItem(EPUB_PROGRESS_STORAGE_PREFIX + storageKey, String(clampProgress(progress)));
-  } catch {
-    // ignore quota / private mode failures
-  }
+export function readStoredReaderLocation(storageKey: string): string | null {
+  if (typeof window === 'undefined') return null;
+  return useReaderReadingStore.getState().getLocation(storageKey);
+}
+
+export function persistStoredReaderLocation(storageKey: string, location: string) {
+  if (typeof window === 'undefined') return;
+  useReaderReadingStore.getState().setLocation(storageKey, location);
+}
+
+export function hasStoredReaderLocation(storageKey: string): boolean {
+  if (typeof window === 'undefined') return false;
+  return useReaderReadingStore.getState().hasLocation(storageKey);
 }

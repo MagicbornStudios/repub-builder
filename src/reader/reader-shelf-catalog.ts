@@ -22,7 +22,7 @@ export function collectDistinctGenres(books: ReaderBookEntry[]): string[] {
 }
 
 /**
- * Normalize a value from localStorage: drop legacy progress filters; unknown genres → `all`.
+ * Normalize a persisted shelf filter value: drop legacy progress filters; unknown genres → `all`.
  */
 export function normalizeShelfCatalogFilter(raw: string | null, knownGenres: string[]): ShelfCatalogFilter {
   if (raw == null || raw === '' || raw === 'all') return 'all';

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { immer } from 'zustand/middleware/immer';
 import type { ReaderPlanningCockpitPayload } from './types';
 
 export type ReaderPlanningModalState = {
@@ -8,9 +9,19 @@ export type ReaderPlanningModalState = {
   closePlanningCockpit: () => void;
 };
 
-export const useReaderModalStore = create<ReaderPlanningModalState>((set) => ({
-  open: false,
-  payload: null,
-  openPlanningCockpit: (payload) => set({ open: true, payload }),
-  closePlanningCockpit: () => set({ open: false, payload: null }),
-}));
+export const useReaderModalStore = create<ReaderPlanningModalState>()(
+  immer((set) => ({
+    open: false,
+    payload: null,
+    openPlanningCockpit: (payload) =>
+      set((draft) => {
+        draft.open = true;
+        draft.payload = payload;
+      }),
+    closePlanningCockpit: () =>
+      set((draft) => {
+        draft.open = false;
+        draft.payload = null;
+      }),
+  })),
+);

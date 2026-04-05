@@ -31,13 +31,11 @@ import { readerChromeClasses as readerChrome } from './reader-chrome-theme';
 import {
   applyShelfCatalogFilter,
   collectDistinctGenres,
-  normalizeShelfCatalogFilter,
   partitionShelfBooks,
-  READER_SHELF_FILTER_STORAGE_KEY,
-  type ShelfCatalogFilter,
 } from './reader-shelf-catalog';
+import { useReaderWorkspaceUiStore } from './reader-workspace-ui-store';
 import {
-  EPUB_LOCATION_STORAGE_PREFIX,
+  hasStoredReaderLocation,
   readStoredReaderProgress,
   resolveReaderShelfStatus,
 } from './reader-progress';
@@ -94,7 +92,6 @@ export type ReaderWorkspaceProps = {
   onUploadImportedBook?: (input: ReaderWorkspaceUploadInput) => Promise<void>;
 };
 
-const READER_NAV_EXPANDED_KEY = 'reader-workspace-nav-expanded';
 const DEFAULT_WORKSPACE_SETTINGS: ReaderWorkspaceSettingsState = {
   defaultWorkspaceView: 'library',
   preferPagedReader: true,
@@ -132,13 +129,7 @@ function loadProgressMap(books: ReaderBookEntry[]): ReaderProgressMap {
 }
 
 function hasSavedLocation(storageKey: string) {
-  if (typeof window === 'undefined') return false;
-
-  try {
-    return Boolean(window.localStorage.getItem(EPUB_LOCATION_STORAGE_PREFIX + storageKey));
-  } catch {
-    return false;
-  }
+  return hasStoredReaderLocation(storageKey);
 }
 
 export default function ReaderWorkspace({
@@ -169,14 +160,15 @@ export default function ReaderWorkspace({
   const [progressByBook, setProgressByBook] = useState<ReaderProgressMap>({});
   const [shelfQuery, setShelfQuery] = useState('');
   const [libraryDragActive, setLibraryDragActive] = useState(false);
-  const [shelfCatalogFilter, setShelfCatalogFilter] = useState<ShelfCatalogFilter>('all');
-  const [prefsHydrated, setPrefsHydrated] = useState(false);
   const [epubPlanningForCockpit, setEpubPlanningForCockpit] = useState<{
     buffer: ArrayBuffer;
     bookSlug: string;
   } | null>(null);
-  const [readerNavExpanded, setReaderNavExpanded] = useState(true);
-  const [readerNavHydrated, setReaderNavHydrated] = useState(false);
+  const readerNavExpanded = useReaderWorkspaceUiStore((s) => s.readerNavExpanded);
+  const toggleReaderNavExpanded = useReaderWorkspaceUiStore((s) => s.toggleReaderNavExpanded);
+  const shelfCatalogFilter = useReaderWorkspaceUiStore((s) => s.shelfCatalogFilter);
+  const setShelfCatalogFilter = useReaderWorkspaceUiStore((s) => s.setShelfCatalogFilter);
+  const clampShelfFilterToGenres = useReaderWorkspaceUiStore((s) => s.clampShelfFilterToGenres);
   const [mobileReaderNavOpen, setMobileReaderNavOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsDraft, setSettingsDraft] = useState<ReaderWorkspaceSettingsState>(
@@ -198,27 +190,6 @@ export default function ReaderWorkspace({
   const [uploadSaveState, setUploadSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [uploadFeedback, setUploadFeedback] = useState<string | null>(null);
   const [autoSelectedBook, setAutoSelectedBook] = useState<ReaderBookEntry | null>(null);
-  const shelfFilterInitRef = useRef(false);
-
-  useEffect(() => {
-    try {
-      const rawNav = localStorage.getItem(READER_NAV_EXPANDED_KEY);
-      if (rawNav === 'false') setReaderNavExpanded(false);
-      else if (rawNav === 'true') setReaderNavExpanded(true);
-    } catch {
-      /* ignore */
-    }
-    setReaderNavHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!readerNavHydrated) return;
-    try {
-      localStorage.setItem(READER_NAV_EXPANDED_KEY, String(readerNavExpanded));
-    } catch {
-      /* ignore */
-    }
-  }, [readerNavExpanded, readerNavHydrated]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -256,30 +227,8 @@ export default function ReaderWorkspace({
   const catalogGenres = useMemo(() => collectDistinctGenres(books), [books]);
 
   useEffect(() => {
-    if (!shelfFilterInitRef.current) {
-      shelfFilterInitRef.current = true;
-      try {
-        const rawF = localStorage.getItem(READER_SHELF_FILTER_STORAGE_KEY);
-        setShelfCatalogFilter(normalizeShelfCatalogFilter(rawF, catalogGenres));
-      } catch {
-        /* ignore */
-      }
-      setPrefsHydrated(true);
-      return;
-    }
-    setShelfCatalogFilter((prev) =>
-      prev !== 'all' && !catalogGenres.includes(prev) ? 'all' : prev,
-    );
-  }, [catalogGenres]);
-
-  useEffect(() => {
-    if (!prefsHydrated) return;
-    try {
-      localStorage.setItem(READER_SHELF_FILTER_STORAGE_KEY, shelfCatalogFilter);
-    } catch {
-      /* ignore */
-    }
-  }, [prefsHydrated, shelfCatalogFilter]);
+    clampShelfFilterToGenres(catalogGenres);
+  }, [catalogGenres, clampShelfFilterToGenres]);
 
   useEffect(() => {
     const sync = () => setProgressByBook(loadProgressMap(books));
@@ -527,7 +476,7 @@ export default function ReaderWorkspace({
           activeTitle={activeTitle}
           ReaderLink={ReaderLink}
           expanded={readerNavExpanded}
-          onToggleExpanded={() => setReaderNavExpanded((v) => !v)}
+          onToggleExpanded={toggleReaderNavExpanded}
           extraLinks={readerShellNavLinks}
           showHeaderCollapse={false}
           mobileNavOpen={mobileReaderNavOpen}
@@ -563,7 +512,7 @@ export default function ReaderWorkspace({
                   ) : null}
                   <Button
                     type="button"
-                    onClick={() => setReaderNavExpanded((v) => !v)}
+                    onClick={toggleReaderNavExpanded}
                     variant="outline"
                     size="sm"
                     className={`hidden shrink-0 rounded-full md:inline-flex ${t.pillButton}`}

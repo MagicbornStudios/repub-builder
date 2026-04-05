@@ -28,9 +28,11 @@ import {
   type PortfolioAnnotation,
 } from './epub-annotations';
 import {
-  EPUB_LOCATION_STORAGE_PREFIX as STORAGE_PREFIX,
   readStoredReaderProgress,
   persistStoredReaderProgress,
+  readStoredReaderLocation,
+  persistStoredReaderLocation,
+  hasStoredReaderLocation,
 } from './reader-progress';
 import {
   mergePersistedAnnotations,
@@ -114,10 +116,10 @@ export interface EpubViewerProps {
   epubUrl?: string;
   epubData?: ArrayBuffer | null;
   title?: string;
-  /** Key for persisting location (e.g. book slug). If set, location is saved to localStorage. */
+  /** Key for persisting location (e.g. book slug). If set, location is saved via reader reading store. */
   storageKey?: string;
   /**
-   * When set, opens here first instead of restoring from localStorage (EPUB internal `href` path or CFI string).
+   * When set, opens here first instead of restoring persisted location (EPUB internal `href` path or CFI string).
    */
   initialLocation?: string | number;
   className?: string;
@@ -615,7 +617,7 @@ export default function EpubViewer({
       return;
     }
 
-    const saved = window.localStorage.getItem(STORAGE_PREFIX + storageKey);
+    const saved = readStoredReaderLocation(storageKey);
     queueMicrotask(() => setLocation(saved ?? 0));
   }, [storageKey, initialLocation]);
 
@@ -627,7 +629,7 @@ export default function EpubViewer({
   useEffect(() => {
     if (!storageKey || typeof location !== 'string') return;
     try {
-      window.localStorage.setItem(STORAGE_PREFIX + storageKey, location);
+      persistStoredReaderLocation(storageKey, location);
     } catch {
       // ignore quota / private mode
     }
@@ -707,12 +709,7 @@ export default function EpubViewer({
         persistStoredReaderProgress(storageKey, nextProgress);
       }
 
-      if (
-        !initialLocation &&
-        typeof window !== 'undefined' &&
-        !window.localStorage.getItem(STORAGE_PREFIX + storageKey) &&
-        remoteState?.location
-      ) {
+      if (!initialLocation && !hasStoredReaderLocation(storageKey) && remoteState?.location) {
         setLocation(remoteState.location);
       }
 
