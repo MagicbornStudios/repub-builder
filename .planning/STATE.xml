@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<state>
+  <current-phase></current-phase>
+  <current-plan></current-plan>
+  <milestone></milestone>
+  <status>not-started</status>
+  <next-action>Initialize GAD planning for repub-builder. Run `gad:new-project` or populate ROADMAP.xml and TASK-REGISTRY.xml from existing work history.</next-action>
+  <last-updated></last-updated>
+  <!-- Planning docs for this project are compiled into the docs sink under the root project.
+       Canonical human-readable versions live in the sink at:
+       apps/portfolio/content/docs/repub-builder/planning/
+       This STATE.xml is the machine-authoritative source. -->
+  <sink-compiled sink="apps/portfolio/content/docs/repub-builder/planning/" at="2026-04-05T16:30:16.720Z" />
+</state>
