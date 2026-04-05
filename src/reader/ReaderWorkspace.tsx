@@ -16,7 +16,6 @@ import {
   Download,
   LibraryBig,
   PanelLeft,
-  PanelLeftClose,
   RotateCcw,
   Search,
   Upload,
@@ -478,7 +477,7 @@ export default function ReaderWorkspace({
           expanded={readerNavExpanded}
           onToggleExpanded={toggleReaderNavExpanded}
           extraLinks={readerShellNavLinks}
-          showHeaderCollapse={false}
+          showHeaderCollapse
           mobileNavOpen={mobileReaderNavOpen}
           onCloseMobileNav={() => setMobileReaderNavOpen(false)}
         />
@@ -493,8 +492,8 @@ export default function ReaderWorkspace({
                     variant="outline"
                     size="sm"
                     className={`md:hidden shrink-0 rounded-full ${t.pillButton}`}
-                    aria-label="Open reader navigation"
-                    title="Reader navigation"
+                    aria-label="Open reader shelf"
+                    title="Reader shelf"
                   >
                     <PanelLeft size={15} aria-hidden />
                   </Button>
@@ -510,17 +509,6 @@ export default function ReaderWorkspace({
                       Library
                     </Link>
                   ) : null}
-                  <Button
-                    type="button"
-                    onClick={toggleReaderNavExpanded}
-                    variant="outline"
-                    size="sm"
-                    className={`hidden shrink-0 rounded-full md:inline-flex ${t.pillButton}`}
-                    aria-label={readerNavExpanded ? 'Collapse reader sidebar' : 'Expand reader sidebar'}
-                    title={readerNavExpanded ? 'Collapse reader sidebar' : 'Expand reader sidebar'}
-                  >
-                    {readerNavExpanded ? <PanelLeftClose size={15} aria-hidden /> : <PanelLeft size={15} aria-hidden />}
-                  </Button>
                   <div className="min-w-0">
                     <p className="section-kicker">{activeKicker}</p>
                     <div className="mt-0.5 flex items-center gap-2">
