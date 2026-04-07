@@ -42,7 +42,6 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 const READER_HEADER_H = 52;
-const READER_FOOTER_H = 44;
 const READER_SPREAD_MIN_WIDTH = 1050;
 const LOCATION_GENERATION_CHARS = 1200;
 const TOC_PANEL_TRANSITION = {
@@ -342,7 +341,8 @@ function createReaderStyles({
       top: headerOffset,
       left: isReaderMode ? 24 : 24,
       right: isReaderMode ? 24 : 24,
-      bottom: isReaderMode ? READER_FOOTER_H + 16 : 24,
+      /** Bottom chrome is laid out in-flow below the iframe (not absolutely positioned). */
+      bottom: isReaderMode ? 24 : 24,
       maxWidth: isReaderMode ? '88rem' : '48rem',
       marginLeft: 'auto',
       marginRight: 'auto',
@@ -497,7 +497,7 @@ function renderTocTree(
           type="button"
           onClick={() => onSelect(href)}
           variant="ghost"
-          className="block h-auto w-full justify-start rounded-lg px-3 py-2 text-left text-sm text-[rgba(236,223,204,0.82)] hover:bg-[rgba(255,255,255,0.05)] hover:text-[#fff3e5]"
+          className="block h-auto min-w-0 w-full justify-start whitespace-normal break-words rounded-lg px-3 py-2 text-left text-sm text-foreground hover:bg-muted/60 hover:text-foreground"
           style={{ paddingLeft: `${0.75 + depth * 0.9}rem` }}
         >
           {item.label}
@@ -1048,10 +1048,45 @@ export default function EpubViewer({
           <span className="text-sm font-medium text-primary truncate">{title}</span>
         </header>
       )}
-      <div className="epub-reader-content flex-1 min-h-0 relative">
+      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="epub-reader-content relative isolate min-h-0 flex-1 overflow-visible">
+        {/* Reader layer first (z-0); overlays render after so they stack above the iframe. */}
+        <div className="absolute inset-0 z-0 min-h-0 overflow-hidden">
+        {isLoadingBook ? (
+          <div className="flex h-full min-h-[inherit] items-center justify-center gap-3 text-sm text-text-muted">
+            <LoaderCircle size={18} className="animate-spin" />
+            <span>Loading book...</span>
+          </div>
+        ) : visibleError || !readyBuffer ? (
+          <div className="flex h-full min-h-[inherit] items-center justify-center px-6 text-center text-sm text-text-muted">
+            {visibleError ?? 'Unable to load this EPUB right now.'}
+          </div>
+        ) : (
+          <ReactReader
+            key={`${sourceKey}-${readyBuffer.byteLength}`}
+            url={readyBuffer}
+            title=""
+            location={location}
+            locationChanged={locationChanged}
+            showToc={false}
+            tocChanged={(nextToc) => handleTocChanged(nextToc as ReaderNavItem[])}
+            getRendition={(rendition) => handleRendition(rendition as ReaderRendition)}
+            epubOptions={{
+              flow: preferPagedReader ? 'paginated' : 'scrolled-doc',
+              manager: 'default',
+              spread: preferPagedReader && layoutMode === 'reader' ? 'auto' : 'none',
+              minSpreadWidth: READER_SPREAD_MIN_WIDTH,
+              snap: true,
+            }}
+            loadingView={<div className="flex h-full items-center justify-center gap-3 text-sm text-text-muted"><LoaderCircle size={18} className="animate-spin" /><span>Loading book...</span></div>}
+            readerStyles={readerStyles}
+            epubViewStyles={epubViewStyles}
+          />
+        )}
+        </div>
         {layoutMode === 'reader' ? (
-          <>
-            <div className="pointer-events-none absolute left-4 top-4 z-50">
+          <div className="pointer-events-none absolute inset-0 z-10">
+            <div className="pointer-events-none absolute left-4 top-4 z-[60]">
               <Button
                 type="button"
                 onClick={() => {
@@ -1069,7 +1104,7 @@ export default function EpubViewer({
             <AnimatePresence initial={false}>
               {isTocOpen ? (
                 <motion.div
-                  className="pointer-events-none absolute inset-0 z-40"
+                  className="pointer-events-none absolute inset-0 z-[45]"
                   initial={{ opacity: 1 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 1 }}
@@ -1077,7 +1112,7 @@ export default function EpubViewer({
                   <motion.button
                     type="button"
                     aria-label="Close contents"
-                    className="pointer-events-auto absolute inset-0 bg-[rgba(0,0,0,0.36)] backdrop-blur-[2px]"
+                    className="pointer-events-auto absolute inset-0 z-[44] bg-black/50 backdrop-blur-[2px]"
                     onClick={() => setIsTocOpen(false)}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -1085,26 +1120,26 @@ export default function EpubViewer({
                     transition={TOC_PANEL_TRANSITION}
                   />
                   <motion.aside
-                    className="pointer-events-auto absolute inset-y-0 left-0 z-30 w-[19rem] border-r border-[rgba(140,102,67,0.14)] bg-[linear-gradient(180deg,rgba(24,18,14,0.97),rgba(13,10,8,0.98))] px-4 pb-6 pt-16 shadow-[18px_0_40px_rgba(0,0,0,0.28)]"
+                    className="pointer-events-auto absolute inset-y-0 left-0 z-[50] flex h-full min-h-0 w-[min(19rem,100vw-2rem)] flex-col rounded-r-2xl border-r border-border bg-background px-4 pb-4 pt-16 shadow-2xl"
                     initial={{ opacity: 0, x: -28 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -28 }}
                     transition={TOC_PANEL_TRANSITION}
                   >
-                    <p className="px-3 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[rgba(213,176,131,0.72)]">
+                    <p className="shrink-0 px-3 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-primary">
                       Contents
                     </p>
                     <motion.div
-                      className="mt-3 max-h-full overflow-y-auto pr-1"
+                      className="mt-3 min-h-0 flex-1 overflow-y-auto overflow-x-hidden pb-4 pr-1"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
                       transition={{ duration: 0.18, delay: 0.04 }}
                     >
                       {tocItems.length ? (
-                        <div className="space-y-1">{renderTocTree(tocItems, handleTocSelect)}</div>
+                        <div className="min-w-0 space-y-1">{renderTocTree(tocItems, handleTocSelect)}</div>
                       ) : (
-                        <p className="px-3 text-sm text-[rgba(236,223,204,0.56)]">Loading contents...</p>
+                        <p className="px-3 text-sm text-muted-foreground">Loading contents...</p>
                       )}
                     </motion.div>
                   </motion.aside>
@@ -1113,7 +1148,7 @@ export default function EpubViewer({
             </AnimatePresence>
             {annotationsEnabled && storageKey ? (
               <>
-                <div className="pointer-events-none absolute right-4 top-4 z-50">
+                <div className="pointer-events-none absolute right-4 top-4 z-[60]">
                   <Button
                     type="button"
                     onClick={() => {
@@ -1131,7 +1166,7 @@ export default function EpubViewer({
                 <AnimatePresence initial={false}>
                   {isNotesOpen ? (
                     <motion.div
-                      className="pointer-events-none absolute inset-0 z-40"
+                      className="pointer-events-none absolute inset-0 z-[45]"
                       initial={{ opacity: 1 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 1 }}
@@ -1139,7 +1174,7 @@ export default function EpubViewer({
                       <motion.button
                         type="button"
                         aria-label="Close notes"
-                        className="pointer-events-auto absolute inset-0 bg-[rgba(0,0,0,0.36)] backdrop-blur-[2px]"
+                        className="pointer-events-auto absolute inset-0 z-[44] bg-black/50 backdrop-blur-[2px]"
                         onClick={() => setIsNotesOpen(false)}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -1147,13 +1182,13 @@ export default function EpubViewer({
                         transition={TOC_PANEL_TRANSITION}
                       />
                       <motion.aside
-                        className="pointer-events-auto absolute inset-y-0 right-0 z-30 flex min-h-0 w-[20rem] max-w-[min(20rem,100vw-2rem)] flex-col border-l border-[rgba(140,102,67,0.14)] bg-[linear-gradient(180deg,rgba(24,18,14,0.97),rgba(13,10,8,0.98))] py-4 pl-3 pr-4 pt-16 shadow-[-18px_0_40px_rgba(0,0,0,0.28)]"
+                        className="pointer-events-auto absolute inset-y-0 right-0 z-[50] flex min-h-0 w-[min(20rem,100vw-2rem)] max-w-[min(20rem,100vw-2rem)] flex-col rounded-l-2xl border-l border-border bg-background py-4 pl-3 pr-4 pt-16 text-foreground shadow-2xl"
                         initial={{ opacity: 0, x: 28 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 28 }}
                         transition={TOC_PANEL_TRANSITION}
                       >
-                        <p className="px-2 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[rgba(213,176,131,0.72)]">
+                        <p className="px-2 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-primary">
                           Highlights & notes
                         </p>
                         <div className="mt-3 flex flex-wrap gap-2 px-2">
@@ -1241,42 +1276,10 @@ export default function EpubViewer({
                 </AnimatePresence>
               </>
             ) : null}
-          </>
+          </div>
         ) : null}
-        {isLoadingBook ? (
-          <div className="flex h-full min-h-[inherit] items-center justify-center gap-3 text-sm text-text-muted">
-            <LoaderCircle size={18} className="animate-spin" />
-            <span>Loading book...</span>
-          </div>
-        ) : visibleError || !readyBuffer ? (
-          <div className="flex h-full min-h-[inherit] items-center justify-center px-6 text-center text-sm text-text-muted">
-            {visibleError ?? 'Unable to load this EPUB right now.'}
-          </div>
-        ) : (
-          <ReactReader
-            key={`${sourceKey}-${readyBuffer.byteLength}`}
-            url={readyBuffer}
-            title=""
-            location={location}
-            locationChanged={locationChanged}
-            showToc={false}
-            tocChanged={(nextToc) => handleTocChanged(nextToc as ReaderNavItem[])}
-            getRendition={(rendition) => handleRendition(rendition as ReaderRendition)}
-            epubOptions={{
-              flow: preferPagedReader ? 'paginated' : 'scrolled-doc',
-              manager: 'default',
-              spread: preferPagedReader && layoutMode === 'reader' ? 'auto' : 'none',
-              minSpreadWidth: READER_SPREAD_MIN_WIDTH,
-              snap: true,
-            }}
-            loadingView={<div className="flex h-full items-center justify-center gap-3 text-sm text-text-muted"><LoaderCircle size={18} className="animate-spin" /><span>Loading book...</span></div>}
-            readerStyles={readerStyles}
-            epubViewStyles={epubViewStyles}
-          />
-        )}
-      </div>
       {layoutMode === 'reader' && annotationsEnabled && selectionDraft ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-[4.75rem] z-40 flex justify-center px-4">
+        <div className="pointer-events-none absolute inset-x-0 bottom-4 z-40 flex justify-center px-4">
           <div className="pointer-events-auto flex max-w-lg items-center gap-2 rounded-full border border-[rgba(140,102,67,0.22)] bg-[rgba(18,13,10,0.92)] px-3 py-2 text-[0.72rem] text-[rgba(236,223,204,0.88)] shadow-[0_12px_32px_rgba(0,0,0,0.35)] backdrop-blur-md">
             <Highlighter size={14} className="shrink-0 text-[#d5b083]" aria-hidden />
             <span className="line-clamp-2 min-w-0 flex-1">{selectionDraft.quote}</span>
@@ -1301,9 +1304,15 @@ export default function EpubViewer({
           </div>
         </div>
       ) : null}
-      {layoutMode === 'reader' && readyBuffer && !isLoadingBook && !visibleError ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-2 z-50 flex justify-center px-4">
-          <div className="pointer-events-auto flex w-full max-w-[102rem] items-center justify-between gap-3 rounded-full border border-[rgba(140,102,67,0.22)] bg-[rgba(14,10,8,0.96)] px-3 py-1.5 text-[0.76rem] text-[rgba(236,223,204,0.86)] shadow-[0_14px_34px_rgba(0,0,0,0.3)] md:px-4">
+      </div>
+      {layoutMode === 'reader' &&
+      readyBuffer &&
+      !isLoadingBook &&
+      !visibleError &&
+      !isTocOpen &&
+      !isNotesOpen ? (
+        <div className="pointer-events-none shrink-0 px-4 pb-3 pt-1">
+          <div className="pointer-events-auto mx-auto flex w-full max-w-[102rem] items-center justify-between gap-3 rounded-full border border-[rgba(140,102,67,0.22)] bg-[rgba(14,10,8,0.96)] px-3 py-1.5 text-[0.76rem] text-[rgba(236,223,204,0.86)] shadow-[0_14px_34px_rgba(0,0,0,0.3)] md:px-4">
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium tracking-[0.03em] text-[rgba(247,239,229,0.82)]">
                 {footerLabel}
@@ -1355,6 +1364,7 @@ export default function EpubViewer({
           </div>
         </div>
       ) : null}
+      </div>
     </div>
   );
 }
