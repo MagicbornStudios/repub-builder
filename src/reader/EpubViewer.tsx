@@ -38,6 +38,7 @@ import {
   mergePersistedAnnotations,
   type ReaderPersistenceAdapter,
 } from './reader-persistence';
+import { unknownErrorMessage } from '../utils/unknown-error';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
@@ -586,7 +587,7 @@ export default function EpubViewer({
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         const message =
-          error instanceof Error ? error.message : 'Unable to load this EPUB right now.';
+          error instanceof Error ? unknownErrorMessage(error) : 'Unable to load this EPUB right now.';
         setLoadedUrl(sourceKey);
         setEpubBuffer(null);
         setLoadError(message);
