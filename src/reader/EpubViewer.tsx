@@ -1121,17 +1121,14 @@ export default function EpubViewer({
                     transition={TOC_PANEL_TRANSITION}
                   />
                   <motion.aside
-                    className="pointer-events-auto absolute inset-y-0 left-0 z-[50] flex h-full min-h-0 w-[min(19rem,100vw-2rem)] flex-col rounded-r-2xl border-r border-border bg-background px-4 pb-4 pt-16 shadow-2xl"
+                    className="pointer-events-auto absolute inset-y-0 left-0 z-[50] flex h-full min-h-0 w-[min(19rem,100vw-2rem)] flex-col rounded-r-2xl border-r border-border bg-background px-4 pb-4 pt-[4.5rem] shadow-2xl"
                     initial={{ opacity: 0, x: -28 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -28 }}
                     transition={TOC_PANEL_TRANSITION}
                   >
-                    <p className="shrink-0 px-3 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-primary">
-                      Contents
-                    </p>
                     <motion.div
-                      className="mt-3 min-h-0 flex-1 overflow-y-auto overflow-x-hidden pb-4 pr-1"
+                      className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pb-4 pr-1 pt-2"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}

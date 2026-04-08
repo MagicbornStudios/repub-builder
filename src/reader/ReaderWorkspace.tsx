@@ -89,6 +89,8 @@ export type ReaderWorkspaceProps = {
   workspaceLibraryRecords?: ReaderWorkspaceLibraryRecord[];
   onSaveWorkspaceSettings?: (settings: ReaderWorkspaceSettingsState) => Promise<void>;
   onUploadImportedBook?: (input: ReaderWorkspaceUploadInput) => Promise<void>;
+  /** When false, the planning strip above the reader is not shown (default true). */
+  showPlanningStrip?: boolean;
 };
 
 const DEFAULT_WORKSPACE_SETTINGS: ReaderWorkspaceSettingsState = {
@@ -131,6 +133,24 @@ function hasSavedLocation(storageKey: string) {
   return hasStoredReaderLocation(storageKey);
 }
 
+function ReaderPlanningStripSlot({
+  config,
+  ReaderLink,
+}: {
+  config: ReaderPlanningStripConfig | null;
+  ReaderLink: ReaderLinkComponent;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <ReaderPlanningStrip
+      config={config}
+      open={open}
+      onToggle={() => setOpen((v) => !v)}
+      ReaderLink={ReaderLink}
+    />
+  );
+}
+
 export default function ReaderWorkspace({
   books,
   initialBook,
@@ -150,12 +170,12 @@ export default function ReaderWorkspace({
   workspaceLibraryRecords = [],
   onSaveWorkspaceSettings,
   onUploadImportedBook,
+  showPlanningStrip = true,
 }: ReaderWorkspaceProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadedBook, setUploadedBook] = useState<UploadedBookSource | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [planningStripOpen, setPlanningStripOpen] = useState(false);
   const [progressByBook, setProgressByBook] = useState<ReaderProgressMap>({});
   const [shelfQuery, setShelfQuery] = useState('');
   const [libraryDragActive, setLibraryDragActive] = useState(false);
@@ -795,12 +815,7 @@ export default function ReaderWorkspace({
               </div>
             ) : null}
           </div>
-          <ReaderPlanningStrip
-            config={planningConfig}
-            open={planningStripOpen}
-            onToggle={() => setPlanningStripOpen((v) => !v)}
-            ReaderLink={ReaderLink}
-          />
+          {showPlanningStrip ? <ReaderPlanningStripSlot config={planningConfig} ReaderLink={ReaderLink} /> : null}
           <div className="min-h-0 flex-1 px-3 pb-3 pt-3 md:px-4 md:pb-4">
             <div className={`mx-auto h-full max-w-[120rem] overflow-hidden rounded-[2rem] border ${t.inset}`}>
               {viewerSource ? (
