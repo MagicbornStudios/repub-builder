@@ -4,7 +4,6 @@ export { default as ReaderWorkspace, type ReaderWorkspaceProps } from './ReaderW
 export type { ReaderShellNavLink } from './ReaderWorkspaceSidebar';
 export { default } from './ReaderWorkspace';
 export { ReaderModalRoot } from './ReaderModalRoot';
-export { ReaderPlanningStrip } from './ReaderPlanningStrip';
 export { ReaderShelfCard } from './ReaderShelfCard';
 export { ReaderEmptyCover } from './ReaderEmptyCover';
 export { default as EpubViewer } from './EpubViewer';
@@ -64,17 +63,9 @@ export type {
   ReaderWorkspaceLibraryRecord,
   ReaderWorkspaceSettingsState,
   ReaderWorkspaceUploadInput,
-  ReaderPlanningCockpitPayload,
-  ReaderPlanningQuickLink,
   ReaderLinkProps,
   ReaderLinkComponent,
-  ReaderPlanningStripConfig,
 } from './types';
-export {
-  extractPlanningPackFromEpub,
-  readerBookPlanningPackId,
-  type ExtractedReaderPlanningPack,
-} from './planning-pack-from-epub';
 export { defaultReaderLink } from './default-reader-link';
 export {
   applyShelfCatalogFilter,

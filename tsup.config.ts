@@ -7,6 +7,7 @@ export default defineConfig({
     index: 'src/index.ts',
     cli: 'src/cli.ts',
     'reader/index': 'src/reader/index.ts',
+    'planning-pack': 'src/planning-pack.ts',
   },
   external: ['react', 'react-dom', 'react/jsx-runtime'],
   format: ['esm'],

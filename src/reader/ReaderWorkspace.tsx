@@ -21,7 +21,6 @@ import {
   Upload,
 } from 'lucide-react';
 import EpubViewer from './EpubViewerLazy';
-import { ReaderPlanningStrip } from './ReaderPlanningStrip';
 import { ReaderShelfCard } from './ReaderShelfCard';
 import { ReaderModalRoot } from './ReaderModalRoot';
 import { ReaderWorkspaceSidebar, type ReaderShellNavLink } from './ReaderWorkspaceSidebar';
@@ -50,9 +49,7 @@ import type {
   ReaderWorkspaceLibraryRecord,
   ReaderWorkspaceSettingsState,
   ReaderWorkspaceUploadInput,
-  ReaderPlanningCockpitPayload,
   ReaderLinkComponent,
-  ReaderPlanningStripConfig,
 } from './types';
 import type { ReaderPersistenceAdapter } from './reader-persistence';
 import { Badge } from './ui/badge';
@@ -72,13 +69,13 @@ export type ReaderWorkspaceProps = {
   readerAppPath?: string;
   builtInEpubHref?: (slug: string) => string;
   ReaderLink?: ReaderLinkComponent;
-  getPlanningStripConfig?: (bookSlug: string | undefined) => ReaderPlanningStripConfig | null;
-  renderPlanningCockpit?: (
-    payload: ReaderPlanningCockpitPayload,
-    onClose: () => void,
-    epubPlanning?: { buffer: ArrayBuffer; bookSlug: string } | null,
-  ) => ReactNode;
-  repoPlannerAppHref?: string;
+  /**
+   * Optional host modal: when set, `ReaderModalRoot` mounts and renders this for the current
+   * `readerModalStore` payload. Omit to ship a reader with no in-workspace modal.
+   */
+  renderReaderModal?: (payload: unknown, onClose: () => void) => ReactNode;
+  /** `aria-label` on the dialog shell when `renderReaderModal` is used. */
+  readerModalAriaLabel?: string;
   /** Shown at the start of the reader toolbar (optional host chrome). */
   readerToolbarStart?: ReactNode;
   /** Optional links below Library when the host wants global nav in the rail (default: none). */
@@ -89,8 +86,6 @@ export type ReaderWorkspaceProps = {
   workspaceLibraryRecords?: ReaderWorkspaceLibraryRecord[];
   onSaveWorkspaceSettings?: (settings: ReaderWorkspaceSettingsState) => Promise<void>;
   onUploadImportedBook?: (input: ReaderWorkspaceUploadInput) => Promise<void>;
-  /** When false, the planning strip above the reader is not shown (default true). */
-  showPlanningStrip?: boolean;
 };
 
 const DEFAULT_WORKSPACE_SETTINGS: ReaderWorkspaceSettingsState = {
@@ -133,24 +128,6 @@ function hasSavedLocation(storageKey: string) {
   return hasStoredReaderLocation(storageKey);
 }
 
-function ReaderPlanningStripSlot({
-  config,
-  ReaderLink,
-}: {
-  config: ReaderPlanningStripConfig | null;
-  ReaderLink: ReaderLinkComponent;
-}) {
-  const [open, setOpen] = useState(false);
-  return (
-    <ReaderPlanningStrip
-      config={config}
-      open={open}
-      onToggle={() => setOpen((v) => !v)}
-      ReaderLink={ReaderLink}
-    />
-  );
-}
-
 export default function ReaderWorkspace({
   books,
   initialBook,
@@ -159,9 +136,8 @@ export default function ReaderWorkspace({
   readerAppPath = '/apps/reader',
   builtInEpubHref,
   ReaderLink = defaultReaderLink,
-  getPlanningStripConfig,
-  renderPlanningCockpit,
-  repoPlannerAppHref = '/apps/repo-planner',
+  renderReaderModal,
+  readerModalAriaLabel,
   readerToolbarStart,
   readerShellNavLinks,
   readerPersistenceAdapter = null,
@@ -170,7 +146,6 @@ export default function ReaderWorkspace({
   workspaceLibraryRecords = [],
   onSaveWorkspaceSettings,
   onUploadImportedBook,
-  showPlanningStrip = true,
 }: ReaderWorkspaceProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadedBook, setUploadedBook] = useState<UploadedBookSource | null>(null);
@@ -179,10 +154,6 @@ export default function ReaderWorkspace({
   const [progressByBook, setProgressByBook] = useState<ReaderProgressMap>({});
   const [shelfQuery, setShelfQuery] = useState('');
   const [libraryDragActive, setLibraryDragActive] = useState(false);
-  const [epubPlanningForCockpit, setEpubPlanningForCockpit] = useState<{
-    buffer: ArrayBuffer;
-    bookSlug: string;
-  } | null>(null);
   const readerNavExpanded = useReaderWorkspaceUiStore((s) => s.readerNavExpanded);
   const toggleReaderNavExpanded = useReaderWorkspaceUiStore((s) => s.toggleReaderNavExpanded);
   const shelfCatalogFilter = useReaderWorkspaceUiStore((s) => s.shelfCatalogFilter);
@@ -296,14 +267,6 @@ export default function ReaderWorkspace({
 
   const viewerSource = workspaceState.viewerSource;
 
-  useEffect(() => {
-    if (viewerSource?.kind !== 'built-in') {
-      setEpubPlanningForCockpit(null);
-      return;
-    }
-    setEpubPlanningForCockpit(null);
-  }, [viewerSource?.kind, viewerSource?.storageKey]);
-
   const builtInSourceBooks = useMemo(
     () => books.filter((entry) => entry.sourceKind !== 'uploaded'),
     [books],
@@ -369,8 +332,6 @@ export default function ReaderWorkspace({
       return candidate;
     });
   }, [books, initialBook, progressByBook, settingsDraft.defaultWorkspaceView, uploadedBook]);
-
-  const planningConfig = getPlanningStripConfig?.(workspaceState.bookSlug ?? undefined) ?? null;
 
   const t = readerChrome;
   const savedUploadCount = workspaceLibraryRecords.filter((record) => record.sourceKind === 'uploaded').length;
@@ -815,7 +776,6 @@ export default function ReaderWorkspace({
               </div>
             ) : null}
           </div>
-          {showPlanningStrip ? <ReaderPlanningStripSlot config={planningConfig} ReaderLink={ReaderLink} /> : null}
           <div className="min-h-0 flex-1 px-3 pb-3 pt-3 md:px-4 md:pb-4">
             <div className={`mx-auto h-full max-w-[120rem] overflow-hidden rounded-[2rem] border ${t.inset}`}>
               {viewerSource ? (
@@ -914,9 +874,6 @@ export default function ReaderWorkspace({
                                       book: book.slug,
                                     })}
                                     ReaderLink={ReaderLink}
-                                    planningCockpitPayload={
-                                      getPlanningStripConfig?.(book.slug)?.cockpitPayload ?? null
-                                    }
                                     showStatusBadge={settingsDraft.showProgressBadges}
                                   />
                                 );
@@ -970,11 +927,9 @@ export default function ReaderWorkspace({
           </div>
         </div>
       </div>
-      <ReaderModalRoot
-        renderPlanningCockpit={renderPlanningCockpit}
-        epubPlanningContext={epubPlanningForCockpit}
-        repoPlannerAppHref={repoPlannerAppHref}
-      />
+      {renderReaderModal ? (
+        <ReaderModalRoot renderContent={renderReaderModal} ariaLabel={readerModalAriaLabel} />
+      ) : null}
     </div>
   );
 }

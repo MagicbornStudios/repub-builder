@@ -16,6 +16,11 @@
       "types": "./dist/reader/index.d.ts",
       "import": "./dist/reader/index.js",
       "default": "./dist/reader/index.js"
+    },
+    "./planning-pack": {
+      "types": "./dist/planning-pack.d.ts",
+      "import": "./dist/planning-pack.js",
+      "default": "./dist/planning-pack.js"
     }
   },
   "bin": {

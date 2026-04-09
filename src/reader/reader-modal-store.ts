@@ -1,27 +1,19 @@
 import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
-import type { ReaderPlanningCockpitPayload } from './types';
 
-export type ReaderPlanningModalState = {
+/**
+ * Host-scoped modal state for the reader workspace. Payload is opaque to the package;
+ * the host supplies `renderReaderModal` to interpret it.
+ */
+export type ReaderModalState = {
   open: boolean;
-  payload: ReaderPlanningCockpitPayload | null;
-  openPlanningCockpit: (payload: ReaderPlanningCockpitPayload) => void;
-  closePlanningCockpit: () => void;
+  payload: unknown | null;
+  openReaderModal: (payload: unknown) => void;
+  closeReaderModal: () => void;
 };
 
-export const useReaderModalStore = create<ReaderPlanningModalState>()(
-  immer((set) => ({
-    open: false,
-    payload: null,
-    openPlanningCockpit: (payload) =>
-      set((draft) => {
-        draft.open = true;
-        draft.payload = payload;
-      }),
-    closePlanningCockpit: () =>
-      set((draft) => {
-        draft.open = false;
-        draft.payload = null;
-      }),
-  })),
-);
+export const useReaderModalStore = create<ReaderModalState>((set) => ({
+  open: false,
+  payload: null,
+  openReaderModal: (payload) => set({ open: true, payload }),
+  closeReaderModal: () => set({ open: false, payload: null }),
+}));

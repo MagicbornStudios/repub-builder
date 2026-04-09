@@ -1,13 +1,11 @@
 'use client';
 
 import React from 'react';
-import { ArrowUpRight, BookOpen, Clock3, PanelRightOpen } from 'lucide-react';
-import type { ReaderBookEntry, ReaderLinkComponent, ReaderPlanningCockpitPayload } from './types';
+import { ArrowUpRight, BookOpen, Clock3 } from 'lucide-react';
+import type { ReaderBookEntry, ReaderLinkComponent } from './types';
 import type { ReaderShelfStatus } from './reader-progress';
 import { ReaderEmptyCover } from './ReaderEmptyCover';
-import { useReaderModalStore } from './reader-modal-store';
 import { Badge } from './ui/badge';
-import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { cn } from './ui/cn';
 
@@ -37,7 +35,6 @@ export function ReaderShelfCard({
   isActive,
   readerHref,
   ReaderLink,
-  planningCockpitPayload,
   showStatusBadge = true,
 }: {
   book: ReaderBookEntry;
@@ -45,12 +42,9 @@ export function ReaderShelfCard({
   isActive: boolean;
   readerHref: string;
   ReaderLink: ReaderLinkComponent;
-  planningCockpitPayload?: ReaderPlanningCockpitPayload | null;
   showStatusBadge?: boolean;
 }) {
-  const openPlanningCockpit = useReaderModalStore((s) => s.openPlanningCockpit);
   const canOpen = book.hasEpub;
-  const showPlanningCta = Boolean(canOpen && planningCockpitPayload);
   const description =
     book.description?.trim() || 'A built-in reading edition is prepared for the in-browser reader workspace.';
   const genres = book.genres?.filter((g) => g.trim()) ?? [];
@@ -98,19 +92,6 @@ export function ReaderShelfCard({
           >
             <BookOpen size={16} aria-hidden />
           </ReaderLink>
-        ) : null}
-        {showPlanningCta && planningCockpitPayload ? (
-          <Button
-            type="button"
-            onClick={() => openPlanningCockpit(planningCockpitPayload)}
-            variant="outline"
-            size="icon"
-            className={iconActionClass}
-            title="Planning cockpit"
-            aria-label="Open planning cockpit"
-          >
-            <PanelRightOpen size={16} aria-hidden />
-          </Button>
         ) : null}
         {!canOpen ? (
           <span
