@@ -29,6 +29,20 @@ Options:
 
 Output: a `.repub` file in the project directory.
 
+## Watch (arbitrary command)
+
+Run a command once at startup, then again whenever files under a directory change (debounced). Uses **chokidar** for recursive watching.
+
+```bash
+repub watch <watchDir> [--debounce <ms>] [--cwd <dir>] -- <command...>
+```
+
+Example from the portfolio monorepo root (rebuild site EPUBs + manifest when `books/` changes):
+
+```bash
+repub watch books --debounce 600 --cwd . -- node scripts/build-books.cjs
+```
+
 ## Programmatic API
 
 ```ts

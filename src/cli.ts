@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { buildRepub } from './index.js';
 import { runRead } from './read.js';
+import { runWatch } from './watch.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -17,6 +18,8 @@ Usage:
   repub build [project-dir]     Build .repub from Vite project (default: cwd)
   repub read <file.repub>       Serve reader and open in browser
   repub epub <folder> [--planning <dir>]... [--annotations <file>] [--output out.epub]  Pack folder of .md/.mdx into EPUB
+  repub watch <dir> [--debounce <ms>] [--cwd <dir>] -- <command...>
+      Watch recursively; run command at start and after changes (debounced).
 
 Options:
   --skip-install   (build) Skip npm install before build
@@ -62,6 +65,64 @@ async function main(): Promise<void> {
     }
     const repubPath = path.resolve(fileArg);
     await runRead(repubPath);
+    return;
+  }
+
+  if (sub === 'watch') {
+    const wargs = argv.slice(1);
+    const dash = wargs.indexOf('--');
+    if (dash === -1) {
+      console.error('repub watch: requires -- <command...> (see repub --help)');
+      process.exit(1);
+    }
+    const command = wargs.slice(dash + 1);
+    if (command.length === 0) {
+      console.error('repub watch: need at least one token after --');
+      process.exit(1);
+    }
+    const optsPart = wargs.slice(0, dash);
+    if (optsPart.length === 0 || optsPart[0]?.startsWith('-')) {
+      console.error('repub watch: first argument must be <watchDir>');
+      process.exit(1);
+    }
+    const watchDirArg = optsPart[0];
+    let debounceMs = 600;
+    let cwd = process.cwd();
+    for (let i = 1; i < optsPart.length; i += 1) {
+      const a = optsPart[i];
+      if (a === '--debounce') {
+        const next = optsPart[i + 1];
+        if (!next) {
+          console.error('repub watch: --debounce requires <ms>');
+          process.exit(1);
+        }
+        debounceMs = Number(next);
+        if (!Number.isFinite(debounceMs) || debounceMs < 0) {
+          console.error('repub watch: --debounce must be a non-negative number');
+          process.exit(1);
+        }
+        i += 1;
+        continue;
+      }
+      if (a === '--cwd') {
+        const next = optsPart[i + 1];
+        if (!next) {
+          console.error('repub watch: --cwd requires a directory');
+          process.exit(1);
+        }
+        cwd = next;
+        i += 1;
+        continue;
+      }
+      console.error(`repub watch: unknown option: ${a}`);
+      process.exit(1);
+    }
+    runWatch({
+      watchDir: path.resolve(watchDirArg),
+      debounceMs,
+      cwd: path.resolve(cwd),
+      command,
+    });
     return;
   }
 
