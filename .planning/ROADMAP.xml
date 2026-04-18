@@ -1,4 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <roadmap>
-  <!-- Phases to be planned. repub-builder is the EPUB builder extracted from the portfolio monorepo. -->
+  <!--
+    Repub-builder externalized 2026-04-18 from custom_portfolio monorepo.
+    Phase 01 brings the standalone repo to release-ready state. Further
+    phases will be filed when a second consumer emerges or the pack
+    format changes under shipped readers.
+  -->
+
+  <phase id="01" name="standalone-ready" status="planned" milestone="standalone-repo">
+    <goal>Stabilize repub-builder as a standalone GitHub-tag-installable
+    package. Green CI, tagged release story, consumer-install
+    verification against the magicborn book projects (magicborn-rune-path,
+    mordreds-tale, mordreds-legacy). Retire the vendored copy inside
+    custom_portfolio.</goal>
+
+    <deliverables>
+      <item>GitHub Actions workflow — pnpm install, pnpm build, pnpm test on push + PR</item>
+      <item>Tagged release (v0.1.0 or higher) documented in README</item>
+      <item>Consumer verify: magicborn book projects install from
+        `git+https://github.com/MagicbornStudios/repub-builder.git#v0.1.0`
+        and build a .repub without workspace:* hacks</item>
+      <item>CONTRIBUTING.md with the GAD loop and CI expectations</item>
+      <item>Cross-ref back to custom_portfolio tracked in DECISIONS.xml</item>
+    </deliverables>
+  </phase>
 </roadmap>

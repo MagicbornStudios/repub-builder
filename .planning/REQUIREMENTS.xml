@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<requirements project="repub-builder">
+  <!--
+    Captured 2026-04-18 when repub-builder was split out of the
+    custom_portfolio monorepo into its own standalone GAD project at
+    MagicbornStudios/repub-builder. Snapshot of the shape the project
+    was already delivering; subsequent requirements should be added
+    here, not inferred from source.
+  -->
+
+  <scope>
+    <identity>RichEPub (.repub) toolchain — build, read, watch, and
+    planning-pack embed. Distributed as @portfolio/repub-builder with
+    bin aliases `repub-build` and `repub`. Installable from a GitHub
+    tag: `pnpm add git+https://github.com/MagicbornStudios/repub-builder.git#main`.</identity>
+
+    <primary-consumers>
+      Magicborn book projects (magicborn-rune-path, mordreds-tale,
+      mordreds-legacy) and any Vite + React + Tailwind project that
+      targets the .repub container format.
+    </primary-consumers>
+  </scope>
+
+  <functional>
+    <requirement id="fr-01" title="Build .repub from a Vite project">
+      `repub-build` / `repub` CLI, invoked in a project dir with
+      vite.config.ts and dist/, produces a single .repub ZIP
+      containing the manifest (repub.json), entry HTML, and bundled
+      assets. Flags: --skip-install, --skip-build.
+    </requirement>
+    <requirement id="fr-02" title="Directory target">
+      Accept a path argument: `npx repub-build /path/to/project`.
+    </requirement>
+    <requirement id="fr-03" title="Reader runtime">
+      Export `@portfolio/repub-builder/reader` so host apps can mount
+      the reader component inside their own React trees, with opt-in
+      planning strip via showPlanningStrip prop (decision captured in
+      commit 03399df).
+    </requirement>
+    <requirement id="fr-04" title="Planning pack">
+      Export `@portfolio/repub-builder/planning-pack` — serialize a
+      project's GAD planning docs (STATE / ROADMAP / TASK-REGISTRY /
+      DECISIONS) into a reader-embeddable pack. Manifest format in
+      planning-pack-manifest.ts.
+    </requirement>
+    <requirement id="fr-05" title="Watch mode">
+      `repub watch` — debounced directory-triggered command runner
+      (feature landed in commit c2b3443). Rebuilds on content change.
+    </requirement>
+    <requirement id="fr-06" title="MDX → HTML pipeline">
+      mdxToHtml.ts converts chapter MDX into reader-ready HTML with
+      frontmatter preserved.
+    </requirement>
+  </functional>
+
+  <non-functional>
+    <requirement id="nfr-01" title="Install surface">
+      Package is published neither to npm nor anywhere mutable —
+      consumers pin a GitHub tag. Repo owns its own release story.
+    </requirement>
+    <requirement id="nfr-02" title="TypeScript-first">
+      Source in src/, built via tsup (tsup.config.ts) to dist/. ESM.
+    </requirement>
+    <requirement id="nfr-03" title="Vitest-backed">
+      Unit tests colocated (epub.test.ts, others); vitest.config.ts
+      at repo root. CI expectation: `pnpm test` green before release tag.
+    </requirement>
+    <requirement id="nfr-04" title="Windows-compatible CLI">
+      CLI must run under Windows without Unix-only path assumptions.
+    </requirement>
+  </non-functional>
+
+  <out-of-scope>
+    <item>Hosting a public reader webapp — host apps mount the reader themselves.</item>
+    <item>.repub signing or DRM — pack-only, no rights enforcement.</item>
+    <item>Cloud build service — CLI is invoked locally or by CI.</item>
+  </out-of-scope>
+
+  <open-questions>
+    <question id="q-01">
+      Does the reader runtime stay in this repo long-term, or split
+      into a sibling package once a second consumer emerges?
+    </question>
+    <question id="q-02">
+      Planning-pack schema evolution — versioning story when the pack
+      format changes under host apps that have shipped an older
+      reader. Migration hook? Pack-version negotiation?
+    </question>
+    <question id="q-03">
+      CI — does the upstream repo need a GitHub Actions workflow to
+      run `pnpm test` + `pnpm build` on push, or is contributor
+      discipline sufficient at this scale?
+    </question>
+  </open-questions>
+</requirements>

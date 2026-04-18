@@ -1,14 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <state>
-  <current-phase></current-phase>
+  <current-phase>01</current-phase>
   <current-plan></current-plan>
-  <milestone></milestone>
-  <status>not-started</status>
-  <next-action>Initialize GAD planning for repub-builder. Run `gad:new-project` or populate ROADMAP.xml and TASK-REGISTRY.xml from existing work history.</next-action>
-  <last-updated></last-updated>
-  <!-- Planning docs for this project are compiled into the docs sink under the root project.
-       Canonical human-readable versions live in the sink at:
-       apps/portfolio/content/docs/repub-builder/planning/
-       This STATE.xml is the machine-authoritative source. -->
-  <sink-compiled sink="apps/portfolio/content/docs/repub-builder/planning/" at="2026-04-11T19:41:13.313Z" />
+  <milestone>standalone-repo</milestone>
+  <status>active</status>
+  <next-action>2026-04-18: Project externalized from custom_portfolio monorepo. REQUIREMENTS.xml captures the existing shape (CLI, reader, planning-pack, watch). Next: (a) write ROADMAP.xml phase 01 "standalone-ready" — CI workflow, tagged release story, consumer-install verification against magicborn projects; (b) push this branch to MagicbornStudios/repub-builder upstream; (c) track portfolio-side removal under get-anything-done TASK "Remove vendor/repub-builder submodule".</next-action>
+  <last-updated>2026-04-18T00:00:00Z</last-updated>
 </state>
